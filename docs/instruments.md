@@ -1,7 +1,7 @@
 # 口袋贵金属 · 标的字典
 
 > 共 **396** 个标的,由 `scripts/gen-instruments.js` 从后端行情目录自动导出。
-> 生成时间:2026-10-15 02:58:11 UTC · 数据源:official.gkoudai.com
+> 生成时间:2026-10-15 03:36:43 UTC · 数据源:official.gkoudai.com
 >
 > 调用方式:`koudai kline <名称|代码|qid> [--period day] [--format json]`。
 > 表中 **qid** 可直接作为 `<symbol>` 传入(无需联网反查);名称/代码亦可,CLI 会自动解析。

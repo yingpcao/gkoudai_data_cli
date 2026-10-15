@@ -1,10 +1,13 @@
-# gkoudai_data_cli · 口袋贵金属行情数据工具集
+# gkoudai_data_cli · Koudai Precious-Metals Market Data Toolkit
 
-免开「口袋贵金属」客户端,直接调用其后端(`official.gkoudai.com`)取 **K 线**与**实时报价**,
-覆盖 **396 个标的**(贵金属、国内/国际期货、国际现货、全球指数、外汇、原油 …,完整清单见
-[标的字典 docs/instruments.md](./docs/instruments.md))。
-接口与加密信封均从 Electron 安装包逆向还原并实测验证,**零第三方依赖**。
-内置一份供 agent 消费的机器可读契约(`koudai spec`)。
+> Language: **English (default)** · [中文说明](./README.zh-CN.md)
+
+Call the 口袋贵金属 (Koudai) desktop app's backend (`official.gkoudai.com`) directly — no client needed —
+to fetch **K-line (OHLC candlesticks)** and **real-time quotes** across **396 instruments**
+(precious metals, China & international futures, international spot, global indices, forex, crude oil …;
+full list in [docs/instruments.md](./docs/instruments.md)).
+The endpoints and the encryption envelope were reverse-engineered from the Electron installer and verified live.
+**Zero third-party dependencies.** Ships with a machine-readable contract for agents (`koudai spec`).
 
 [![node](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org)
 [![deps](https://img.shields.io/badge/dependencies-0-green)]()
@@ -12,179 +15,183 @@
 
 ---
 
-## 安装(在线)
+## Install (online)
 
-> 命令名统一为 `koudai`。要求 Node ≥ 18。
+> The command is `koudai`. Requires Node ≥ 18.
 
-**方式 A · 直接从 GitHub 全局安装(推荐,免克隆)**
+**Option A · Install globally straight from GitHub (recommended, no clone)**
 ```bash
 npm install -g git+https://github.com/yingpcao/gkoudai_data_cli.git
-koudai kline 现货黄金 --period day --count 100
+koudai kline xau --period day --count 100
 ```
 
-**方式 B · 用 npx 临时运行(不安装)**
+**Option B · Run on the fly with npx (no install)**
 ```bash
-npx --yes git+https://github.com/yingpcao/gkoudai_data_cli.git kline LME铜 --period 1h --count 50 -f json
+npx --yes git+https://github.com/yingpcao/gkoudai_data_cli.git kline lmecopper --period 1h --count 50 -f json
 ```
 
-> **为什么写完整的 `git+https://` 而不是 `github:yingpcao/gkoudai_data_cli`?**
-> npm 对 `github:` 简写默认走 **SSH**(`ssh://git@github.com/...`),本机没有配置 GitHub 公钥时会报
-> `git@github.com: Permission denied (publickey)`。写成 `git+https://` 则走 HTTPS,公开仓库免鉴权即可安装。
+> **Why the full `git+https://` URL instead of `github:yingpcao/gkoudai_data_cli`?**
+> npm resolves the `github:` shorthand over **SSH** (`ssh://git@github.com/...`), which fails with
+> `git@github.com: Permission denied (publickey)` on machines without a GitHub key. `git+https://` uses HTTPS,
+> so this public repo installs without any authentication.
 
-**方式 C · 克隆本地安装(开发/定制)**
+**Option C · Clone and install locally (development / customization)**
 ```bash
 git clone https://github.com/yingpcao/gkoudai_data_cli.git
 cd gkoudai_data_cli
-npm install -g .      # 或本地直接用: node bin/koudai.js kline 美元指数
+npm install -g .      # or run directly: node bin/koudai.js kline dxy
 ```
 
 <details>
-<summary>方式 D · 发布到 npm 后(若已 publish)</summary>
+<summary>Option D · From the npm registry (once published)</summary>
 
 ```bash
 npm install -g koudai-data
 ```
 </details>
 
-**Windows 小提示**:全局安装后若 `koudai` 不在 PATH,重开终端,或用 `npx koudai` / 完整路径 `%AppData%\npm\koudai.cmd`。
+**Windows tip**: if `koudai` isn't on PATH after a global install, reopen the terminal, or use `npx koudai` / the full path `%AppData%\npm\koudai.cmd`.
 
 ---
 
-## 快速开始
+## Quick start
 
 ```bash
-koudai kline 现货黄金 --period day --count 200 -f csv   # 内置标的,免联网解析
-koudai kline 布伦特原油连续 -f json                     # 任意标的,自动联网反查 qid
-koudai kline 35082 --period 5m --count 30              # 直接传数字 qid(沪银)
-koudai kline 美元指数 --start 2026-01-01 --count 200    # 取历史区间附近的数据
-koudai quote 现货黄金                                  # 实时报价快照
-koudai symbol search 沪银                              # 搜索标的 => qid
-koudai spec                                           # 机器可读调用契约(JSON)
+koudai kline xau --period day --count 200 -f csv     # built-in symbol, resolved offline
+koudai kline dxy --period 1h --count 50 -f json      # US Dollar Index, hourly
+koudai kline 35082 --period 5m --count 30            # pass a raw numeric qid directly
+koudai kline lmetin --start 2026-01-01 --count 200   # bars near a historical start time
+koudai quote xau                                     # real-time quote snapshot
+koudai symbol resolve lmecopper                      # name/code/qid => qid
+koudai symbol search LME                             # fuzzy search across all 396 instruments
+koudai spec                                          # machine-readable contract (JSON)
 koudai --help
 ```
 
-## 命令
+## Commands
 
-| 命令 | 说明 |
+| Command | Description |
 |---|---|
-| `koudai kline <symbol> [--period day] [--count 100] [--format table\|json\|csv] [--start <date>] [--raw]` | 取 OHLC K 线 |
-| `koudai quote <symbol> [--format table\|json] [--tail 10]` | 取实时报价(分时快照) |
-| `koudai symbol resolve <name\|code\|qid>` | 解析标的 qid |
-| `koudai symbol search <关键词>` | 在全部 396 个标的里搜索 |
-| `koudai symbol list` | 列出内置别名 |
-| `koudai spec` | 打印 agent 调用契约(JSON) |
-| `koudai version` | 版本 |
+| `koudai kline <symbol> [--period day] [--count 100] [--format table\|json\|csv] [--start <date>] [--raw]` | Fetch OHLC candlestick bars |
+| `koudai quote <symbol> [--format table\|json] [--tail 10]` | Fetch a real-time quote (tick snapshot) |
+| `koudai symbol resolve <name\|code\|qid>` | Resolve an instrument's qid |
+| `koudai symbol search <keyword>` | Fuzzy search across all 396 instruments |
+| `koudai symbol list` | List built-in aliases |
+| `koudai spec` | Print the agent contract (JSON) |
+| `koudai version` | Print version |
 
-### `<symbol>` 解析规则
-1. **内置别名**(离线,最快):`现货黄金/xau` `现货白银/xag` `美元指数/dxy` `LME铜/lmecopper` `LME锡/lmetin` `沪锡主连/shanghai-tin`
-2. **纯数字** → 直接作为后端 `qid`
-3. **中文名/代码** → 联网在行情目录精确匹配,退化为包含匹配(覆盖 396 个标的)
+### `<symbol>` resolution rules
+1. **Built-in alias** (offline, fastest): `xau` `xag` `dxy` `lmecopper` `lmetin` `shanghai-tin` (also the Chinese names `现货黄金` `美元指数` …)
+2. **Pure number** → used directly as the backend `qid`
+3. **Chinese name / code** → matched exactly against the live instrument tree, falling back to substring matching (covers all 396 instruments)
 
 ### `--period`
-`1m 3m 5m 10m 15m 20m 30m 60m|1h 2h 3h 4h day week month quarter year`,或数字 `type` 码(见 `koudai spec`)。
+`1m 3m 5m 10m 15m 20m 30m 60m|1h 2h 3h 4h day week month quarter year`, or a numeric `type` code (see `koudai spec`).
 
-## 内置常用标的
+## Built-in instruments
 
-| 名称 | 代码 | qid | | 名称 | 代码 | qid |
+| Name | Code | qid | | Name | Code | qid |
 |---|---|---|---|---|---|---|
-| LME铜 | LMECU | 95 | | 现货黄金 | XAU | 12 |
-| LME锡 | LMESN | 92 | | 美元指数 | DINI | 22 |
-| 现货白银 | XAG | 13 | | 沪锡主连 | sn6666 | 35105 |
+| LME Copper | LMECU | 95 | | Spot Gold | XAU | 12 |
+| LME Tin | LMESN | 92 | | US Dollar Index | DINI | 22 |
+| Spot Silver | XAG | 13 | | Shanghai Tin (main) | sn6666 | 35105 |
 
-其余标的用名称/代码/qid 均可访问;新常用标的可加进 `src/reference.js` 的 `BUILTIN_SYMBOLS`。
+Every other instrument is reachable by its name / code / qid; to add a frequently used one, extend `BUILTIN_SYMBOLS` in [src/reference.js](./src/reference.js).
 
-## 标的字典(全量 396)
+## Instrument dictionary (all 396)
 
-完整清单见 **[docs/instruments.md](./docs/instruments.md)** —— 按分类/板块列出每个标的的 `名称 / 代码 / qid`,
-调用时可直接把 `qid` 当作 `<symbol>` 传入。字典由脚本从后端目录自动导出,可随行情变动重新生成:
+The full list lives in **[docs/instruments.en.md](./docs/instruments.en.md)** — each instrument's `name / code / qid` grouped by category/board, so you can pass a `qid` straight as `<symbol>`. Names are shown in the backend's native Chinese (the string `symbol resolve`/`search` matches); `code` and `qid` are language-neutral. The dictionary is auto-exported from the backend catalog and can be regenerated:
 
 ```bash
-npm run gen:instruments   # 重新抓取并更新 docs/instruments.md
+npm run gen:instruments:all   # regenerate zh (docs/instruments.md) + en (docs/instruments.en.md)
 ```
 
-## Agent / 程序化集成
+> 中文版字典见 [docs/instruments.md](./docs/instruments.md)。
 
-- **契约**:运行 `koudai spec` 得到 JSON(命令、参数、`periods`、内置 `symbols`、`statusCodes`、输出 schema、信封说明)。人类可读版见 [SPEC.md](./SPEC.md)。
-- **取数**:优先 `--format json`,结构稳定:
+## Agent / programmatic integration
+
+- **Contract**: run `koudai spec` to get JSON (commands, args, `periods`, built-in `symbols`, `statusCodes`, output schema, envelope notes). Human-readable version: [SPEC.md](./SPEC.md).
+- **Fetching data**: prefer `--format json`; the shape is stable:
   ```jsonc
   { "name":"现货黄金","qid":"12","period":{"code":6,"name":"day"},"count":200,
     "candles":[ {"time":"2026-10-15","timestamp":1791993600000,"open":4106.59,"high":4151.42,"low":4099.95,"close":4146.77,"volume":56942} ] }
   ```
-- **嵌入调用**:
+  (the `name` field carries the backend's native Chinese label — `XAU`/`dxy` etc. are inputs, not returned names)
+- **Embedding**:
   ```js
   const { fetchKline, resolveSymbol } = require('koudai-data');
-  const hit = await resolveSymbol('现货黄金');
+  const hit = await resolveSymbol('xau');
   const { candles } = await fetchKline({ qid: hit.qid, period: 'day', count: 200 });
   ```
-- **退出码**:`0` 成功 · `1` 用法/解析失败 · `2` 后端业务错误 · `3` 传输/解密错误。
+- **Exit codes**: `0` success · `1` usage / resolution error · `2` upstream API error · `3` transport / decryption error.
 
-## 供 Agent 安装(Skill)
+## Install as an Agent Skill
 
-仓库自带一份 [Agent Skill `skills/koudai-data/SKILL.md`](./skills/koudai-data/SKILL.md) —— 让支持 skills 约定的 agent 自动发现并调用本工具(安装前置、命令、`symbol` 解析、周期、退出码)。它不重复维护契约,而是指向 `koudai spec`。
+The repo ships an [Agent Skill `skills/koudai-data/SKILL.md`](./skills/koudai-data/SKILL.md) so skill-aware agents can discover and call this tool automatically (install prerequisite, commands, `symbol` resolution, periods, exit codes). It does not duplicate the contract — it defers to `koudai spec`.
 
-**Claude Code / Claude**(消费 `SKILL.md`)—— 安装本 skill:
+**Claude Code / Claude** (consumes `SKILL.md`) — install the skill:
 
 ```bash
-# 用户级(全局可用)
+# user-level (available everywhere)
 mkdir -p ~/.claude/skills && cp -r skills/koudai-data ~/.claude/skills/
-# 或项目级:克隆后把 skills/koudai-data 放到仓库的 .claude/skills/ 下
+# or project-level: after cloning, drop skills/koudai-data into the repo's .claude/skills/
 ```
 
-装好后 agent 会在需要行情/K线/报价时自动触发,也可 `/koudai-data` 手动调用。
+Once installed, agents trigger it automatically when they need quotes/K-lines; it can also be invoked explicitly with `/koudai-data`.
 
-**Codex 等不吃 SKILL.md 的 agent** —— 把下面片段并入仓库/项目的 `AGENTS.md`:
+**Agents that don't read SKILL.md (e.g. Codex)** — fold the snippet below into your repo/project `AGENTS.md`:
 
 ```markdown
-## koudai — 口袋贵金属行情 CLI
-需要贵金属/期货/外汇/指数/原油的 K 线或实时报价时使用 `koudai` 命令(Node≥18)。
-安装:npm install -g git+https://github.com/yingpcao/gkoudai_data_cli.git
-先运行 `koudai spec` 获取权威命令/周期/状态码;取数加 `-f json`。
-K线:koudai kline <名称|代码|qid> --period day --count 200 -f json
-报价:koudai quote 美元指数 -f json   ·   查标的:koudai symbol search 沪银
+## koudai — Koudai market-data CLI
+Use the `koudai` command (Node ≥ 18) when you need K-lines or real-time quotes for precious metals / futures / forex / indices / crude oil.
+Install: npm install -g git+https://github.com/yingpcao/gkoudai_data_cli.git
+Run `koudai spec` first for the authoritative commands/periods/status codes; add `-f json` when fetching.
+K-line: koudai kline xau --period day --count 200 -f json
+Quote:  koudai quote dxy -f json   ·   lookup: koudai symbol resolve lmecopper
 ```
 
-## 工作原理(逆向记录)
+## How it works (reverse-engineering notes)
 
-- 基础:`https://official.gkoudai.com/officialNetworkApi/…`
-- K线 `CandleStickV2`;实时 `getRealTimeQuote`;目录 `GetQuoteTypesV4 → typeQuotesByTidV4`(取 `id`=qid)。
-- **加密信封**:8 位随机会话密钥 → `DES-CBC`(IV `sojexcom`)加密查询串得 `x`;`RSA-PKCS1#1.5`(内置 1024bit 公钥)加密会话密钥得 `y`;GET 传 `?x=&y=`;响应 `data` 用同一会话密钥 DES 解密。行情/K线接口**无需登录**。
-- DES-CBC 在新版 Node 需 OpenSSL legacy provider;`koudai` 入口会自动带 `--openssl-legacy-provider` 重启自身,无需手动配置。
-- 实现集中在 `src/protocol.js`,常量在 `src/reference.js`。
+- Base: `https://official.gkoudai.com/officialNetworkApi/…`
+- K-line `CandleStickV2`; real-time `getRealTimeQuote`; catalog `GetQuoteTypesV4 → typeQuotesByTidV4` (read `id` = qid).
+- **Encryption envelope**: a random 8-char session key → `DES-CBC` (IV `sojexcom`) encrypts the query string into `x`; `RSA-PKCS1#1.5` (built-in 1024-bit public key) encrypts the session key into `y`; the GET request sends `?x=&y=`; the response `data` is DES-decrypted with the same session key. Market/K-line endpoints require **no login**.
+- DES-CBC needs Node's OpenSSL legacy provider on newer Node; the `koudai` entry re-execs itself with `--openssl-legacy-provider` automatically, so no manual setup is needed.
+- Implementation lives in [src/protocol.js](./src/protocol.js), constants in [src/reference.js](./src/reference.js).
 
-## 项目结构
+## Project layout
 
 ```
-bin/koudai.js     CLI 入口(legacy provider 重启 + 退出码)
-index.js          编程接口
-src/reference.js  端点/周期码/内置标的/状态码/字段含义(单一事实来源)
-src/protocol.js   DES-CBC + RSA 信封
-src/http.js       加密请求/解密/重试/业务异常
-src/catalog.js    名称↔qid 解析与搜索
-src/kline.js      K 线取数与规范化
-src/quote.js      实时报价
-src/format.js     table/csv/json
-src/spec.js       agent 契约生成
-src/cli.js        参数解析与分发
-scripts/gen-instruments.js  导出 docs/instruments.md 全量标的字典
-docs/instruments.md  396 个标的字典(名称/代码/qid/分类/板块)
-skills/koudai-data/SKILL.md  供 Claude/Claude Code 消费的 Agent Skill
-SPEC.md README.md LICENSE package.json
+bin/koudai.js               CLI entry (legacy-provider re-exec + exit codes)
+index.js                    Programmatic API
+src/reference.js            Endpoints / period codes / built-ins / status codes / field glossary (single source of truth)
+src/protocol.js             DES-CBC + RSA envelope
+src/http.js                 Encrypted request / decrypt / retry / business errors
+src/catalog.js              Name↔qid resolution and search
+src/kline.js                K-line fetch and normalization
+src/quote.js                Real-time quotes
+src/format.js               table/csv/json
+src/spec.js                 Agent contract generation
+src/cli.js                  Argument parsing and dispatch
+scripts/gen-instruments.js  Export docs/instruments.md (.en.md) — full dictionary
+docs/instruments.md / docs/instruments.en.md  396-instrument dictionary (zh/en; name/code/qid/board)
+skills/koudai-data/SKILL.md Agent Skill for Claude / Claude Code
+SPEC.md README.md README.zh-CN.md LICENSE package.json
 ```
 
-## 开发与发布
+## Development & publishing
 
 ```bash
-npm run smoke      # 全子命令实盘冒烟
-npm run pack:dry   # 预览打包内容
-# 发布到 npm(可选): npm login && npm publish   (包名 koudai-data)
+npm run smoke      # live smoke test across all subcommands
+npm run pack:dry   # preview the packaged contents
+# publish to npm (optional): npm login && npm publish   (package name: koudai-data)
 ```
 
-## 免责声明
+## Disclaimer
 
-- 本项目仅对公开行情接口做技术封装与学习用途,**与口袋贵金属/gkoudai 官方无关**;数据版权归原始行情提供方。
-- 逆向接口可能因后端变更(换密钥/加签/改路径)随时失效;届时先 `koudai spec` 核对信封,再重抓安装包内 `resources/app/*.asar.gz` 复核 `src/protocol.js`、`src/reference.js`。
-- 请遵守数据源使用条款,**控制请求频率,勿用于高频抓取或二次分发**。
+- This project is a technical wrapper over a public market-data endpoint for learning purposes only, and is **unaffiliated with 口袋贵金属 / gkoudai**; data copyright belongs to the original providers.
+- The reverse-engineered interface may break at any time if the backend changes (new key, signing, path changes). If it does, first check the envelope via `koudai spec`, then re-inspect `resources/app/*.asar.gz` in the installer to update `src/protocol.js` and `src/reference.js`.
+- Respect the data source's terms of use — **throttle requests; do not use for high-frequency scraping or redistribution**.
 
-## 许可
+## License
 
 [MIT](./LICENSE)

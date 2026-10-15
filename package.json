@@ -15,12 +15,14 @@
   },
   "bugs": { "url": "https://github.com/yingpcao/gkoudai_data_cli/issues" },
   "homepage": "https://github.com/yingpcao/gkoudai_data_cli#readme",
-  "files": ["bin/", "src/", "scripts/", "docs/", "skills/", "index.js", "README.md", "SPEC.md", "LICENSE"],
+  "files": ["bin/", "src/", "scripts/", "docs/", "skills/", "index.js", "README.md", "README.zh-CN.md", "SPEC.md", "LICENSE"],
   "scripts": {
     "koudai": "node bin/koudai.js",
     "kline": "node bin/koudai.js kline",
     "spec": "node bin/koudai.js spec",
     "gen:instruments": "node --openssl-legacy-provider scripts/gen-instruments.js",
+    "gen:instruments:en": "node --openssl-legacy-provider scripts/gen-instruments.js --lang en",
+    "gen:instruments:all": "npm run gen:instruments && npm run gen:instruments:en",
     "smoke": "node bin/koudai.js kline 现货黄金 --period day --count 3 -f json && node bin/koudai.js quote 美元指数 && node bin/koudai.js symbol search 沪银 && node bin/koudai.js spec | node -e \"JSON.parse(require('fs').readFileSync(0,'utf8'));console.log('spec OK')\"",
     "pack:dry": "npm pack --dry-run"
   },
