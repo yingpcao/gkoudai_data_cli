@@ -2,7 +2,7 @@
   "name": "koudai-data",
   "version": "1.0.0",
   "description": "口袋贵金属行情数据工具集 — K线/实时报价 CLI，逆向 official.gkoudai.com 加密接口，覆盖 396 个标的，附带 agent 可调用的机器可读 spec。",
-  "keywords": ["koudai", "口袋贵金属", "gkoudai", "kline", "candlestick", "quote", "行情", "CLI", "LME", "贵金属"],
+  "keywords": ["koudai", "口袋贵金属", "gkoudai", "kline", "candlestick", "quote", "行情", "CLI", "LME", "贵金属", "agent-skill"],
   "license": "MIT",
   "author": "yingpcao",
   "type": "commonjs",
@@ -15,7 +15,7 @@
   },
   "bugs": { "url": "https://github.com/yingpcao/gkoudai_data_cli/issues" },
   "homepage": "https://github.com/yingpcao/gkoudai_data_cli#readme",
-  "files": ["bin/", "src/", "scripts/", "docs/", "index.js", "README.md", "SPEC.md", "LICENSE"],
+  "files": ["bin/", "src/", "scripts/", "docs/", "skills/", "index.js", "README.md", "SPEC.md", "LICENSE"],
   "scripts": {
     "koudai": "node bin/koudai.js",
     "kline": "node bin/koudai.js kline",

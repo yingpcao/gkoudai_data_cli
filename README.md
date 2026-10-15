@@ -118,6 +118,31 @@ npm run gen:instruments   # 重新抓取并更新 docs/instruments.md
   ```
 - **退出码**:`0` 成功 · `1` 用法/解析失败 · `2` 后端业务错误 · `3` 传输/解密错误。
 
+## 供 Agent 安装(Skill)
+
+仓库自带一份 [Agent Skill `skills/koudai-data/SKILL.md`](./skills/koudai-data/SKILL.md) —— 让支持 skills 约定的 agent 自动发现并调用本工具(安装前置、命令、`symbol` 解析、周期、退出码)。它不重复维护契约,而是指向 `koudai spec`。
+
+**Claude Code / Claude**(消费 `SKILL.md`)—— 安装本 skill:
+
+```bash
+# 用户级(全局可用)
+mkdir -p ~/.claude/skills && cp -r skills/koudai-data ~/.claude/skills/
+# 或项目级:克隆后把 skills/koudai-data 放到仓库的 .claude/skills/ 下
+```
+
+装好后 agent 会在需要行情/K线/报价时自动触发,也可 `/koudai-data` 手动调用。
+
+**Codex 等不吃 SKILL.md 的 agent** —— 把下面片段并入仓库/项目的 `AGENTS.md`:
+
+```markdown
+## koudai — 口袋贵金属行情 CLI
+需要贵金属/期货/外汇/指数/原油的 K 线或实时报价时使用 `koudai` 命令(Node≥18)。
+安装:npm install -g git+https://github.com/yingpcao/gkoudai_data_cli.git
+先运行 `koudai spec` 获取权威命令/周期/状态码;取数加 `-f json`。
+K线:koudai kline <名称|代码|qid> --period day --count 200 -f json
+报价:koudai quote 美元指数 -f json   ·   查标的:koudai symbol search 沪银
+```
+
 ## 工作原理(逆向记录)
 
 - 基础:`https://official.gkoudai.com/officialNetworkApi/…`
@@ -142,6 +167,7 @@ src/spec.js       agent 契约生成
 src/cli.js        参数解析与分发
 scripts/gen-instruments.js  导出 docs/instruments.md 全量标的字典
 docs/instruments.md  396 个标的字典(名称/代码/qid/分类/板块)
+skills/koudai-data/SKILL.md  供 Claude/Claude Code 消费的 Agent Skill
 SPEC.md README.md LICENSE package.json
 ```
 
