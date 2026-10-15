@@ -114,8 +114,10 @@ function usage(msg) {
 
 async function run(argv) {
   const [command, ...rest] = argv;
+  if (command == null || ['help', '-h', '--help'].includes(command)) { console.log(HELP); return 0; }
+  if (['-v', '--version'].includes(command)) { const { version } = require('../package.json'); console.log(version); return; }
   const { flags, positional } = parseFlags(rest);
-  if (flags.help || command === 'help' || !command) { console.log(HELP); return 0; }
+  if (flags.help) { console.log(HELP); return 0; }
 
   switch (command) {
     case 'kline': return cmdKline(positional, flags);

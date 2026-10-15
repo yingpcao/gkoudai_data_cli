@@ -18,14 +18,18 @@
 
 **方式 A · 直接从 GitHub 全局安装(推荐,免克隆)**
 ```bash
-npm install -g github:yingpcao/gkoudai_data_cli
+npm install -g git+https://github.com/yingpcao/gkoudai_data_cli.git
 koudai kline 现货黄金 --period day --count 100
 ```
 
 **方式 B · 用 npx 临时运行(不安装)**
 ```bash
-npx github:yingpcao/gkoudai_data_cli kline LME铜 --period 1h --count 50 -f json
+npx --yes git+https://github.com/yingpcao/gkoudai_data_cli.git kline LME铜 --period 1h --count 50 -f json
 ```
+
+> **为什么写完整的 `git+https://` 而不是 `github:yingpcao/gkoudai_data_cli`?**
+> npm 对 `github:` 简写默认走 **SSH**(`ssh://git@github.com/...`),本机没有配置 GitHub 公钥时会报
+> `git@github.com: Permission denied (publickey)`。写成 `git+https://` 则走 HTTPS,公开仓库免鉴权即可安装。
 
 **方式 C · 克隆本地安装(开发/定制)**
 ```bash
