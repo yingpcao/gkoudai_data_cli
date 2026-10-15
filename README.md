@@ -1,7 +1,8 @@
 # gkoudai_data_cli · 口袋贵金属行情数据工具集
 
 免开「口袋贵金属」客户端,直接调用其后端(`official.gkoudai.com`)取 **K 线**与**实时报价**,
-覆盖约 **388 个标的**(贵金属、国内/国际期货、国际现货、全球指数、外汇、原油 …)。
+覆盖 **396 个标的**(贵金属、国内/国际期货、国际现货、全球指数、外汇、原油 …,完整清单见
+[标的字典 docs/instruments.md](./docs/instruments.md))。
 接口与加密信封均从 Electron 安装包逆向还原并实测验证,**零第三方依赖**。
 内置一份供 agent 消费的机器可读契约(`koudai spec`)。
 
@@ -65,7 +66,7 @@ koudai --help
 | `koudai kline <symbol> [--period day] [--count 100] [--format table\|json\|csv] [--start <date>] [--raw]` | 取 OHLC K 线 |
 | `koudai quote <symbol> [--format table\|json] [--tail 10]` | 取实时报价(分时快照) |
 | `koudai symbol resolve <name\|code\|qid>` | 解析标的 qid |
-| `koudai symbol search <关键词>` | 在全部约 388 个标的里搜索 |
+| `koudai symbol search <关键词>` | 在全部 396 个标的里搜索 |
 | `koudai symbol list` | 列出内置别名 |
 | `koudai spec` | 打印 agent 调用契约(JSON) |
 | `koudai version` | 版本 |
@@ -73,7 +74,7 @@ koudai --help
 ### `<symbol>` 解析规则
 1. **内置别名**(离线,最快):`现货黄金/xau` `现货白银/xag` `美元指数/dxy` `LME铜/lmecopper` `LME锡/lmetin` `沪锡主连/shanghai-tin`
 2. **纯数字** → 直接作为后端 `qid`
-3. **中文名/代码** → 联网在行情目录精确匹配,退化为包含匹配(覆盖约 388 个标的)
+3. **中文名/代码** → 联网在行情目录精确匹配,退化为包含匹配(覆盖 396 个标的)
 
 ### `--period`
 `1m 3m 5m 10m 15m 20m 30m 60m|1h 2h 3h 4h day week month quarter year`,或数字 `type` 码(见 `koudai spec`)。
@@ -87,6 +88,15 @@ koudai --help
 | 现货白银 | XAG | 13 | | 沪锡主连 | sn6666 | 35105 |
 
 其余标的用名称/代码/qid 均可访问;新常用标的可加进 `src/reference.js` 的 `BUILTIN_SYMBOLS`。
+
+## 标的字典(全量 396)
+
+完整清单见 **[docs/instruments.md](./docs/instruments.md)** —— 按分类/板块列出每个标的的 `名称 / 代码 / qid`,
+调用时可直接把 `qid` 当作 `<symbol>` 传入。字典由脚本从后端目录自动导出,可随行情变动重新生成:
+
+```bash
+npm run gen:instruments   # 重新抓取并更新 docs/instruments.md
+```
 
 ## Agent / 程序化集成
 
@@ -126,6 +136,8 @@ src/quote.js      实时报价
 src/format.js     table/csv/json
 src/spec.js       agent 契约生成
 src/cli.js        参数解析与分发
+scripts/gen-instruments.js  导出 docs/instruments.md 全量标的字典
+docs/instruments.md  396 个标的字典(名称/代码/qid/分类/板块)
 SPEC.md README.md LICENSE package.json
 ```
 

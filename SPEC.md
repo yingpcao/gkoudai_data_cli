@@ -8,7 +8,7 @@
 |---|---|
 | 命令 | `koudai`(等价 `node bin/koudai.js`) |
 | 数据源 | `https://official.gkoudai.com/`(口袋贵金属后端) |
-| 覆盖标的 | 约 388 个(贵金属 / 国内期货 / 国际期货 / 国际现货 / 全球指数 / 外汇 / 原油 …) |
+| 覆盖标的 | 396 个(贵金属 / 国内期货 / 国际期货 / 国际现货 / 全球指数 / 外汇 / 原油 …;完整清单见 [docs/instruments.md](./docs/instruments.md)) |
 | 依赖 | 无第三方依赖,仅 Node 内置 `crypto`/`https` |
 | 运行要求 | Node ≥18;CLI 会自带 `--openssl-legacy-provider` 重启自身,直接调用即可 |
 | 鉴权 | 行情/K线接口**无需登录** |

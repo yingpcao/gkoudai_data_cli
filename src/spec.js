@@ -12,7 +12,7 @@ const COMMANDS = [
     summary: 'Fetch OHLC candlestick bars for any instrument.',
     usage: 'koudai kline <symbol> [--period day] [--count 100] [--format table|json|csv] [--start <date>] [--raw]',
     args: [
-      { name: 'symbol', positional: true, required: true, desc: 'Built-in alias, Chinese name, code, a raw numeric qid, or any instrument name (auto-resolved over the live catalog of ~388 instruments).' },
+      { name: 'symbol', positional: true, required: true, desc: 'Built-in alias, Chinese name, code, a raw numeric qid, or any instrument name (auto-resolved over the live catalog of ~396 instruments; full list in docs/instruments.md).' },
       { name: '--period', default: 'day', desc: 'Bar period alias or numeric type code. See spec.periods.' },
       { name: '--count', default: 100, desc: 'Number of most-recent bars.' },
       { name: '--start', desc: 'ISO date / timestamp; returns bars around that historical start (server-side pagination hint).' },

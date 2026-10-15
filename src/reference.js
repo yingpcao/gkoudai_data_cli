@@ -39,7 +39,7 @@ const PERIOD_ALIASES = {
   '日线': 6, '周线': 7, '月线': 8, '季线': 17, '年线': 15,
 };
 
-// Convenience aliases for frequently-used instruments (any of ~388 instruments
+// Convenience aliases for frequently-used instruments (any of ~396 instruments
 // is supported via catalog resolution or a raw numeric qid).
 const BUILTIN_SYMBOLS = {
   'LME铜': { qid: '95', code: 'LMECU', name: 'LME铜' },

@@ -1,6 +1,6 @@
 'use strict';
 // Instrument catalog: walks the live quote tree and resolves any name/code/qid
-// to a canonical { qid, code, name }. Covers ~388 instruments, far beyond the
+// to a canonical { qid, code, name }. Covers all ~396 instruments, far beyond the
 // built-in aliases. Results are cached per process.
 
 const { request } = require('./http');

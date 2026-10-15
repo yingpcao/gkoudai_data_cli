@@ -34,7 +34,7 @@ Commands:
   kline <symbol>   取 K 线    [--period day] [--count 100] [--format table|json|csv] [--start <date>] [--raw]
   quote <symbol>   取实时报价 [--format table|json]
   symbol resolve <name|code|qid>     解析标的 qid
-  symbol search <关键词>              在全部约 388 个标的中搜索
+  symbol search <关键词>              在全部 396 个标的中搜索
   symbol list                         列出内置别名
   spec                                输出机器可读的调用契约 (JSON, 供 agent 使用)
   version                             输出版本
