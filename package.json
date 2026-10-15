@@ -1,0 +1,27 @@
+{
+  "name": "koudai-data",
+  "version": "1.0.0",
+  "description": "口袋贵金属行情数据工具集 — K线/实时报价 CLI，逆向 official.gkoudai.com 加密接口，覆盖约 388 个标的，附带 agent 可调用的机器可读 spec。",
+  "keywords": ["koudai", "口袋贵金属", "gkoudai", "kline", "candlestick", "quote", "行情", "CLI", "LME", "贵金属"],
+  "license": "MIT",
+  "author": "yingpcao",
+  "type": "commonjs",
+  "main": "index.js",
+  "bin": { "koudai": "bin/koudai.js" },
+  "engines": { "node": ">=18" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yingpcao/gkoudai_data_cli.git"
+  },
+  "bugs": { "url": "https://github.com/yingpcao/gkoudai_data_cli/issues" },
+  "homepage": "https://github.com/yingpcao/gkoudai_data_cli#readme",
+  "files": ["bin/", "src/", "index.js", "README.md", "SPEC.md", "LICENSE"],
+  "scripts": {
+    "koudai": "node bin/koudai.js",
+    "kline": "node bin/koudai.js kline",
+    "spec": "node bin/koudai.js spec",
+    "smoke": "node bin/koudai.js kline 现货黄金 --period day --count 3 -f json && node bin/koudai.js quote 美元指数 && node bin/koudai.js symbol search 沪银 && node bin/koudai.js spec >/dev/null",
+    "pack:dry": "npm pack --dry-run"
+  },
+  "dependencies": {}
+}

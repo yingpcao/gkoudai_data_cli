@@ -1,0 +1,11 @@
+node_modules/
+*.log
+.DS_Store
+.re/
+_re/
+*.asar
+*.asar.gz
+npm-debug.log*
+coverage/
+dist/
+*.tgz
