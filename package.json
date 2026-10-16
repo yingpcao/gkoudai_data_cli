@@ -1,8 +1,8 @@
 {
   "name": "koudai-data",
   "version": "1.0.0",
-  "description": "口袋贵金属行情数据工具集 — K线/实时报价 CLI，逆向 official.gkoudai.com 加密接口，覆盖 396 个标的，附带 agent 可调用的机器可读 spec。",
-  "keywords": ["koudai", "口袋贵金属", "gkoudai", "kline", "candlestick", "quote", "行情", "CLI", "LME", "贵金属", "agent-skill"],
+  "description": "口袋贵金属行情与资讯数据工具集 — K线/实时报价/快讯/机构观点/研报 CLI，逆向 official.gkoudai.com 加密接口，覆盖 396 个标的，附带 agent 可调用的机器可读 spec。",
+  "keywords": ["koudai", "口袋贵金属", "gkoudai", "kline", "candlestick", "quote", "行情", "资讯", "快讯", "研报", "news", "CLI", "LME", "贵金属", "agent-skill"],
   "license": "MIT",
   "author": "yingpcao",
   "type": "commonjs",
@@ -23,7 +23,7 @@
     "gen:instruments": "node --openssl-legacy-provider scripts/gen-instruments.js",
     "gen:instruments:en": "node --openssl-legacy-provider scripts/gen-instruments.js --lang en",
     "gen:instruments:all": "npm run gen:instruments && npm run gen:instruments:en",
-    "smoke": "node bin/koudai.js kline 现货黄金 --period day --count 3 -f json && node bin/koudai.js quote 美元指数 && node bin/koudai.js symbol search 沪银 && node bin/koudai.js spec | node -e \"JSON.parse(require('fs').readFileSync(0,'utf8'));console.log('spec OK')\"",
+    "smoke": "node bin/koudai.js kline 现货黄金 --period day --count 3 -f json && node bin/koudai.js quote 美元指数 && node bin/koudai.js symbol search 沪银 && node bin/koudai.js news wire --count 3 -f json && node bin/koudai.js news flash 沪锡主连 --count 3 -f json && node bin/koudai.js news types && node bin/koudai.js spec | node -e \"JSON.parse(require('fs').readFileSync(0,'utf8'));console.log('spec OK')\"",
     "pack:dry": "npm pack --dry-run"
   },
   "dependencies": {}

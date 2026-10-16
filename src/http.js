@@ -39,8 +39,16 @@ function once(path, params, timeoutMs) {
           try { env = JSON.parse(raw); }
           catch { return reject(new Error(`non-JSON response ${res.statusCode}: ${raw.slice(0, 200)}`)); }
           if (env.status !== 1000) return reject(new ApiError(env.status, env.desc));
-          try { resolve(JSON.parse(desDecrypt(env.data, sessionKey))); }
-          catch (e) { reject(new Error(`decrypt failed: ${e.message}`)); }
+          let body;
+          try { body = JSON.parse(desDecrypt(env.data, sessionKey)); }
+          catch (e) { return reject(new Error(`decrypt failed: ${e.message}`)); }
+          // The decrypted payload is a second {status,desc,data} envelope and the
+          // two layers disagree: a bad id passes the outer check with 1000 and only
+          // signals failure (1002/1008, data=null) here.
+          if (body && typeof body.status === 'number' && body.status !== 1000) {
+            return reject(new ApiError(body.status, body.desc));
+          }
+          resolve(body);
         });
       }
     );

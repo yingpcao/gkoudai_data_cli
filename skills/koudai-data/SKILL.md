@@ -1,13 +1,13 @@
 ---
 name: koudai-data
-description: Fetch K-line (OHLC candlestick) history, real-time quotes, and resolve instrument codes for 口袋贵金属 / official.gkoudai.com via the `koudai` CLI. Use when asked for precious-metals, futures, forex, global-index, crude-oil or bond candlesticks or live prices — e.g. 现货黄金/现货白银, LME铜/LME锡, 美元指数(DXY), 沪锡主连/沪银, 布伦特/WTI原油, 全球指数 — or to map a Chinese name/code to a numeric qid. Zero-dependency, no login.
-when_to_use: When the user needs market data (K线/行情/报价/OHLC) for koudai/gkoudai-covered instruments, or must look up an instrument's qid before querying.
+description: Fetch K-line (OHLC candlestick) history, real-time quotes, market news (7x24 newswire, per-instrument flashes, broker viewpoints, research reports, editorial columns) and resolve instrument codes for 口袋贵金属 / official.gkoudai.com via the `koudai` CLI. Use when asked for precious-metals, futures, forex, global-index, crude-oil or bond candlesticks or live prices — e.g. 现货黄金/现货白银, LME铜/LME锡, 美元指数(DXY), 沪锡主连/沪银, 布伦特/WTI原油, 全球指数 — for market news such as 快讯/资讯/机构观点/研报/财经日历/经济数据发布, or to map a Chinese name/code to a numeric qid. Zero-dependency, no login.
+when_to_use: When the user needs market data (K线/行情/报价/OHLC) or 资讯 (快讯/研报/机构观点/专栏) for koudai/gkoudai-covered instruments, or must look up an instrument's qid before querying.
 argument-hint: <command> <symbol> [--period day] [--count N]
 ---
 
 # Koudai market data
 
-Pull candlestick history, real-time quotes and instrument lookups from the
+Pull candlestick history, real-time quotes, market news and instrument lookups from the
 口袋贵金属 (official.gkoudai.com) endpoint through the `koudai` CLI. ~396
 instruments across 贵金属/国内外期货/全球外汇/全球指数/原油/国际债券/特色指数.
 
@@ -31,9 +31,9 @@ the authoritative, machine-readable spec:
 koudai spec
 ```
 
-It returns JSON with `commands`, `periods.codes`/`periods.aliases`,
-`builtInSymbols`, `statusCodes`, and the encryption `envelope`. Treat it as the
-single source of truth; the CLI below may drift from this document.
+It returns JSON with `commands`, `periods.codes`/`periods.aliases`, `news.kinds`,
+`news.columns`, `builtInSymbols`, `statusCodes`, and the encryption `envelope`.
+Treat it as the single source of truth; the CLI below may drift from this document.
 
 ## Commands
 
@@ -47,6 +47,15 @@ koudai kline 布伦特原油连续 --start 2026-01-01 --count 30 -f json   # his
 
 # Real-time quote snapshot (add --tail N for raw ticks)
 koudai quote 美元指数 -f json
+
+# News — five separate backends behind one UI panel
+koudai news wire    --count 30 -f json     # global 7x24 stream; --important for red-flagged only
+koudai news flash   沪锡主连 --count 30     # per-instrument flashes (needs symbol)
+koudai news viewpoint 现货黄金 -f json     # broker commentary (needs symbol)
+koudai news report  35105 -f json          # research reports (needs symbol; futures only)
+koudai news column --type 地缘局势         # editorial columns
+koudai news types                          # list column categories
+koudai news show <id> --kind column|viewpoint|report [--type <column>]   # article body
 
 # Resolve / search instruments
 koudai symbol resolve 现货黄金       # name | code | qid | source
@@ -65,8 +74,8 @@ koudai --help
 3. Any Chinese name or code — auto-resolved against the live instrument tree.
 
 When a name is ambiguous or unknown, run `koudai symbol search <关键词>` first
-to get the exact `qid`, then pass the qid. `kline`/`quote` exit `1` with a hint
-if a symbol cannot be resolved.
+to get the exact `qid`, then pass the qid. `kline`/`quote`/`news` exit `1` with a
+hint if a symbol cannot be resolved.
 
 ## Periods
 
@@ -74,15 +83,35 @@ if a symbol cannot be resolved.
 month quarter year`, or Chinese like `日线`) or a raw numeric type code. See
 `koudai spec` → `periods` for the full mapping.
 
-## Output shape (kline json)
+## Output shape
 
-`{ name, qid, period:{code,name}, count, candles:[{time,timestamp,open,high,low,
-close,volume,amount,settlement,openInterest,latest}, ...] }`. Non-time-series
-fields may come back as `"0.0"` strings for spot instruments — parse tolerantly.
+- **kline json**: `{ name, qid, period:{code,name}, count, candles:[{time,timestamp,
+  open,high,low,close,volume,amount,settlement,openInterest,latest}, ...] }`.
+  Non-time-series fields may come back as `"0.0"` strings for spot instruments — parse tolerantly.
+- **news json**: `{ kind, label, symbol|null, count, items:[{id,timestamp,time,title,
+  body,important,...}] }`. `timestamp` is epoch ms, `time` is a Beijing-time string —
+  sort on `timestamp`. Per-kind extras: `viewpoint` → `source`/`digest`;
+  `report` → `author`/`tag`/`pdfUrl`/`needRisk`; `column` → `media`.
+  `wire` items whose upstream `type` is `"data"` are **economic-calendar releases** and
+  carry `economic:{event,result,forecast,previous,level,effect,effectText}`; `effect` is
+  0 = minor, positive = bullish for gold/silver, negative = bearish.
+- **news show json**: `{id,title,time,source|author,content(HTML),text(plain),imageCount}`;
+  reports have no HTML body and return `pdfUrl` instead. An empty `text` with
+  `imageCount > 0` means an image-only article, not a fetch failure.
+
+## News caveats
+
+- `report` only has data for **exchange-traded futures qids** (e.g. 沪锡主连 35105).
+  Spot Gold 12, Spot Silver 13, LME 95/92 and indices 22 always return an empty list —
+  upstream coverage, not a bug. Report bodies are PDF-only via `pdfUrl`.
+- `viewpoint` is served from a different prefix (`/futures/`) than every other endpoint.
+- Pagination cursors differ per feed; `--count` handles it, so don't pass page numbers.
+- Auth-gated endpoints (e.g. `indicator/queryNewsByTsRange`) are not implemented; a
+  `needRisk: true` report is gated behind a risk assessment that requires login.
 
 ## Exit codes
 
-- `0` success · `1` usage error (missing/unknown symbol or period) · `2` upstream API error (see `statusCodes` in spec) · `3` runtime/network error.
+- `0` success · `1` usage error (missing/unknown symbol, period or column) · `2` upstream API error (see `statusCodes` in spec) · `3` runtime/network error.
 
 On failure the reason is on stderr as `koudai: ...`.
 
@@ -92,3 +121,6 @@ On failure the reason is on stderr as `koudai: ...`.
 - The DES-based endpoint needs Node's legacy OpenSSL provider; the CLI re-execs
   itself with that flag, so plain `koudai ...` works out of the box.
 - Historical `--start` returns bars around that timestamp, newest first.
+- Responses are a **two-layer envelope**: the outer status only covers transport, the
+  business status is inside the decrypted body. The CLI checks both, so exit `2` with
+  `status=1008`/`1002` means the id you passed doesn't exist.

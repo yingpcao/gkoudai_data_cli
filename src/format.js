@@ -35,4 +35,70 @@ function format(result, kind, opts) {
   return table(result);
 }
 
-module.exports = { format, table, csv, json };
+// ---- 资讯 (news) outputs ----------------------------------------------------
+
+const CSV_CELL = /[",\r\n]/;
+function csvCell(v) {
+  const s = v == null ? '' : String(v);
+  return CSV_CELL.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+function newsTable(result) {
+  const head = result.symbol
+    ? `${result.symbol.name} (qid=${result.symbol.qid}) — ${result.label}`
+    : result.label;
+  const out = [`${head}  ${result.count} 条`];
+  for (const it of result.items) {
+    const flag = it.important ? '[重要]' : (it.digest ? '[汇总]' : '      ');
+    out.push(`${it.time || '-'}  ${flag} ${it.title}`);
+    if (it.body) out.push(`           ${it.body}`);
+    if (it.economic) {
+      const e = it.economic;
+      out.push(`           ${e.event}  公布 ${e.result ?? '-'} / 预期 ${e.forecast ?? '-'} / 前值 ${e.previous ?? '-'}` +
+        `${e.level ? `  重要级 ${e.level}` : ''}${e.effectText ? `  ${e.effectText}` : ''}`);
+    }
+    const extra = [];
+    if (it.author) extra.push(`作者 ${it.author}`);
+    if (it.source) extra.push(it.source);
+    if (it.tag) extra.push(`标签 ${it.tag}`);
+    if (it.pdfUrl) extra.push(it.pdfUrl);
+    if (it.needRisk) extra.push('需风险测评');
+    if (extra.length) out.push(`           ${extra.join(' | ')}`);
+  }
+  return out.join('\n');
+}
+
+const NEWS_CSV_COLS = 'id,time,important,title,source,author,tag,pdfUrl,body';
+
+function newsCsv(result) {
+  const lines = [NEWS_CSV_COLS];
+  for (const it of result.items) {
+    lines.push([
+      it.id, it.time, it.important, it.title, it.source || it.media || '', it.author || '',
+      it.tag || '', it.pdfUrl || '', it.body || '',
+    ].map(csvCell).join(','));
+  }
+  return lines.join('\n');
+}
+
+function newsJson(result) {
+  return JSON.stringify({
+    kind: result.kind,
+    label: result.label,
+    symbol: result.symbol || null,
+    count: result.count,
+    items: result.items,
+  }, null, 2);
+}
+
+function newsDetailJson(detail) {
+  return JSON.stringify(detail, null, 2);
+}
+
+function formatNews(result, kind) {
+  if (kind === 'csv') return newsCsv(result);
+  if (kind === 'json') return newsJson(result);
+  return newsTable(result);
+}
+
+module.exports = { format, table, csv, json, formatNews, newsTable, newsCsv, newsJson, newsDetailJson };

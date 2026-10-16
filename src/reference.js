@@ -14,13 +14,51 @@ const ENVELOPE = {
   response: 'JSON {status,desc,data}; data is base64 DES ciphertext decrypted with the session key',
 };
 
-// Business endpoint paths (relative to BASE_URL).
+// Business endpoint paths (relative to BASE_URL). `viewpoint*` deliberately lives
+// under a different prefix (/futures) than everything else here.
 const ENDPOINTS = {
   kline: 'officialNetworkApi/CandleStickV2',
   realtimeQuote: 'officialNetworkApi/getRealTimeQuote',
   quoteCategories: 'officialNetworkApi/GetQuoteTypesV4',
   quotesByCategory: 'officialNetworkApi/typeQuotesByTidV4',
+  // 资讯 — five unrelated backends behind one UI panel.
+  instrumentFlash: 'officialNetworkApi/attachNews/getNewsFlash',
+  newsWire: 'officialNetworkApi/RealTimeList',
+  newsWireBefore: 'officialNetworkApi/RealTimeListByid',
+  newsTypes: 'officialNetworkApi/newsServer/getNewsType',
+  newsColumnPage: 'officialNetworkApi/newsServer/pageSpecialColumnNewsByType',
+  newsContent: 'officialNetworkApi/newsServer/getNewsContent',
+  viewpointList: 'futures/getPointNews',
+  viewpointDetail: 'futures/getPointNewsById',
+  reportList: 'officialNetworkApi/newsServer/reportListV2',
+  reportDetail: 'officialNetworkApi/newsServer/reportDetail',
 };
+
+// Editorial columns (newsServer/getNewsType). Server is authoritative; kept here
+// so `--type 黄金分析` resolves offline.
+const NEWS_COLUMNS = {
+  1: '黄金分析', 2: '央行动态', 3: '大宗商品', 4: '股债市场', 5: '地缘局势',
+};
+
+// 资讯 feed kinds and what each one maps to.
+const NEWS_KINDS = {
+  flash: { label: '品种快讯', endpoint: 'instrumentFlash', needsSymbol: true, detail: null },
+  wire: { label: '7x24 快讯流', endpoint: 'newsWire', needsSymbol: false, detail: null },
+  column: { label: '资讯专栏', endpoint: 'newsColumnPage', needsSymbol: false, detail: 'newsContent' },
+  viewpoint: { label: '机构观点', endpoint: 'viewpointList', needsSymbol: true, detail: 'viewpointDetail' },
+  report: { label: '研报', endpoint: 'reportList', needsSymbol: true, detail: 'reportDetail' },
+};
+
+// Research reports only exist for exchange-traded futures qids (e.g. 沪锡主连
+// 35105); spot metals (12/13), LME (95/92) and indices (22) always return empty.
+const NEWS_NOTES = {
+  reportCoverage: '研报仅覆盖期货品种 qid，现货/LME/指数类标的恒为空列表',
+  viewpointPrefix: '机构观点走 /futures/ 前缀，与其余 officialNetworkApi 接口不同',
+  reportPdf: 'report.pdfUrl 是券商官网直链，可离线下载；正文不提供 HTML',
+  economicEvents: 'wire 条目 type="data" 时带 economic 字段，是经济日历发布',
+  authRequired: 'indicator/queryNewsByTsRange 等带 accessToken 的接口需登录，本工具未实现',
+};
+
 
 // CandleStick `type` period codes.
 const PERIOD_CODES = {
@@ -60,12 +98,16 @@ const BUILTIN_SYMBOLS = {
   'shanghai-tin': { qid: '35105', code: 'sn6666', name: '沪锡主连' },
 };
 
-// Response envelope status codes observed from the API.
+// Response envelope status codes observed from the API. Both the outer transport
+// envelope and the decrypted body carry `status`; see http.js — the body layer is
+// the one that reports bad ids.
 const STATUS_CODES = {
   1000: 'OK / success (data decrypted)',
+  1002: 'Response Error (e.g. unknown news id)',
   1003: 'Parameters Error',
+  1008: 'Server Error (upstream rejects the arguments, e.g. unknown detail id)',
   1502: 'Login expired / requires auth',
-  404: 'Route not found',
+  404: 'Route not found (usually a missing officialNetworkApi/ prefix)',
 };
 
 // Candle field glossary (raw API keys).
@@ -77,4 +119,7 @@ const CANDLE_FIELDS = {
   sp: 'settlement price', p: 'open interest / position', nsp: 'latest price',
 };
 
-module.exports = { HOST, BASE_URL, ENVELOPE, ENDPOINTS, PERIOD_CODES, PERIOD_ALIASES, BUILTIN_SYMBOLS, STATUS_CODES, CANDLE_FIELDS };
+module.exports = {
+  HOST, BASE_URL, ENVELOPE, ENDPOINTS, NEWS_COLUMNS, NEWS_KINDS, NEWS_NOTES,
+  PERIOD_CODES, PERIOD_ALIASES, BUILTIN_SYMBOLS, STATUS_CODES, CANDLE_FIELDS,
+};

@@ -8,6 +8,7 @@
 
 const { fetchKline, resolvePeriod, normaliseCandle } = require('./src/kline');
 const { fetchQuote } = require('./src/quote');
+const news = require('./src/news');
 const catalog = require('./src/catalog');
 const reference = require('./src/reference');
 const protocol = require('./src/protocol');
@@ -17,6 +18,11 @@ const format = require('./src/format');
 
 module.exports = {
   fetchKline, fetchQuote, resolvePeriod, normaliseCandle,
+  fetchNewsFlash: news.fetchInstrumentFlash, fetchNewsWire: news.fetchWire,
+  fetchViewpoints: news.fetchViewpoint, fetchReports: news.fetchReport,
+  fetchNewsColumn: news.fetchColumn, fetchNewsColumnTypes: news.fetchColumnTypes,
+  fetchNewsContent: news.fetchColumnContent, fetchViewpointContent: news.fetchViewpointContent,
+  fetchReportContent: news.fetchReportContent,
   resolveSymbol: catalog.resolve, searchSymbols: catalog.search, listInstruments: catalog.allInstruments,
   request: http.request, ApiError: http.ApiError,
   protocol, reference, buildSpec, format,
